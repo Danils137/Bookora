@@ -10,20 +10,7 @@ const getBaseUrl = () => {
     return process.env.EXPO_PUBLIC_RORK_API_BASE_URL;
   }
 
-  // Для веб-приложения используем тот же домен с портом сервера
-  if (typeof window !== 'undefined') {
-    // В браузере
-    const port = window.location.port;
-    const protocol = window.location.protocol;
-    const hostname = window.location.hostname;
-
-    // Если порт не стандартный (80 или 443), добавляем его
-    const portSuffix = port && port !== '80' && port !== '443' ? `:${port}` : '';
-
-    return `${protocol}//${hostname}${portSuffix}`;
-  }
-
-  // Для сервера разработки (fallback)
+  // Для веб-приложения и сервера разработки используем localhost:3002
   return 'http://localhost:3002';
 };
 

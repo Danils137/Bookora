@@ -6,6 +6,7 @@
     "start": "bunx rork start -p ln1bfhsw7jinlao560fgi --tunnel",
     "start-web": "EXPO_PUBLIC_RORK_API_BASE_URL=http://localhost:3002 bunx rork start -p ln1bfhsw7jinlao560fgi --web --tunnel",
     "start-web-dev": "DEBUG=expo* EXPO_PUBLIC_RORK_API_BASE_URL=http://localhost:3002 bunx rork start -p ln1bfhsw7jinlao560fgi --web --tunnel",
+    "build": "expo export --platform web",
     "lint": "expo lint",
     "server": "node backend/server-simple.js",
     "dev": "concurrently \"npm run server\" \"npm run start-web\""

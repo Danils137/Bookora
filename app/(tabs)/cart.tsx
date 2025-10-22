@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -7,13 +7,16 @@ import {
   Image,
   StyleSheet,
 } from 'react-native';
-import { Trash2, Plus, Minus } from 'lucide-react-native';
+import { Trash2, Plus, Minus, Globe } from 'lucide-react-native';
 import { useCart } from '@/contexts/CartContext';
+import { useLocale } from '@/contexts/LocaleContext';
 import { trpc } from '@/lib/trpc';
 import { router } from 'expo-router';
 
 export default function CartScreen() {
   const { items, removeItem, updateQuantity } = useCart();
+  const { t, formatCurrency, language, changeLanguage } = useLocale();
+  const [showLanguageMenu, setShowLanguageMenu] = useState(false);
 
   const booksQuery = trpc.books.list.useQuery({ limit: 100 });
 
@@ -33,15 +36,48 @@ export default function CartScreen() {
     return (
       <View style={styles.container}>
         <View style={styles.header}>
-          <Text style={styles.headerTitle}>Shopping Cart</Text>
+          <Text style={styles.headerTitle}>{t('cart.title')}</Text>
+          <TouchableOpacity
+            style={styles.languageButton}
+            onPress={() => setShowLanguageMenu(!showLanguageMenu)}
+          >
+            <Globe size={20} color="#007AFF" />
+            <Text style={styles.languageButtonText}>{language.toUpperCase()}</Text>
+          </TouchableOpacity>
+          {showLanguageMenu && (
+            <View style={styles.languageMenu}>
+              {(['en', 'ru', 'lv'] as const).map((lang) => (
+                <TouchableOpacity
+                  key={lang}
+                  style={[
+                    styles.languageMenuItem,
+                    language === lang && styles.languageMenuItemActive,
+                  ]}
+                  onPress={() => {
+                    changeLanguage(lang);
+                    setShowLanguageMenu(false);
+                  }}
+                >
+                  <Text
+                    style={[
+                      styles.languageMenuItemText,
+                      language === lang && styles.languageMenuItemTextActive,
+                    ]}
+                  >
+                    {t(`language.${lang}`)}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          )}
         </View>
         <View style={styles.emptyContainer}>
-          <Text style={styles.emptyText}>Your cart is empty</Text>
+          <Text style={styles.emptyText}>{t('cart.empty')}</Text>
           <TouchableOpacity
             style={styles.primaryButton}
             onPress={() => router.push('/(tabs)')}
           >
-            <Text style={styles.buttonText}>Browse Books</Text>
+            <Text style={styles.buttonText}>{t('cart.continueShopping')}</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -51,8 +87,43 @@ export default function CartScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Shopping Cart</Text>
-        <Text style={styles.itemCount}>{items.length} items</Text>
+        <View>
+          <Text style={styles.headerTitle}>{t('cart.title')}</Text>
+          <Text style={styles.itemCount}>{items.length} items</Text>
+        </View>
+        <TouchableOpacity
+          style={styles.languageButton}
+          onPress={() => setShowLanguageMenu(!showLanguageMenu)}
+        >
+          <Globe size={20} color="#007AFF" />
+          <Text style={styles.languageButtonText}>{language.toUpperCase()}</Text>
+        </TouchableOpacity>
+        {showLanguageMenu && (
+          <View style={styles.languageMenu}>
+            {(['en', 'ru', 'lv'] as const).map((lang) => (
+              <TouchableOpacity
+                key={lang}
+                style={[
+                  styles.languageMenuItem,
+                  language === lang && styles.languageMenuItemActive,
+                ]}
+                onPress={() => {
+                  changeLanguage(lang);
+                  setShowLanguageMenu(false);
+                }}
+              >
+                <Text
+                  style={[
+                    styles.languageMenuItemText,
+                    language === lang && styles.languageMenuItemTextActive,
+                  ]}
+                >
+                  {t(`language.${lang}`)}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        )}
       </View>
 
       <FlatList
@@ -67,7 +138,7 @@ export default function CartScreen() {
                 {item.book?.title}
               </Text>
               <Text style={styles.bookAuthor}>{item.book?.author}</Text>
-              <Text style={styles.bookPrice}>${item.book?.price.toFixed(2)}</Text>
+              <Text style={styles.bookPrice}>{formatCurrency(item.book?.price || 0)}</Text>
             </View>
             <View style={styles.actions}>
               <View style={styles.quantityControls}>
@@ -98,14 +169,14 @@ export default function CartScreen() {
 
       <View style={styles.footer}>
         <View style={styles.totalContainer}>
-          <Text style={styles.totalLabel}>Total</Text>
-          <Text style={styles.totalAmount}>${total.toFixed(2)}</Text>
+          <Text style={styles.totalLabel}>{t('cart.total')}</Text>
+          <Text style={styles.totalAmount}>{formatCurrency(total)}</Text>
         </View>
         <TouchableOpacity
           style={styles.checkoutButton}
           onPress={() => router.push('/checkout')}
         >
-          <Text style={styles.checkoutButtonText}>Proceed to Checkout</Text>
+          <Text style={styles.checkoutButtonText}>{t('cart.checkout')}</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -122,11 +193,59 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderBottomWidth: 1,
     borderBottomColor: '#E5E5E5',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
   },
   headerTitle: {
     fontSize: 28,
     fontWeight: '700' as const,
     color: '#000',
+  },
+  languageButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+    backgroundColor: '#F5F5F5',
+  },
+  languageButtonText: {
+    fontSize: 14,
+    fontWeight: '600' as const,
+    color: '#007AFF',
+  },
+  languageMenu: {
+    position: 'absolute',
+    top: 60,
+    right: 16,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 8,
+    minWidth: 150,
+    overflow: 'hidden',
+    zIndex: 1000,
+  },
+  languageMenuItem: {
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    backgroundColor: '#FFFFFF',
+  },
+  languageMenuItemActive: {
+    backgroundColor: '#F0F8FF',
+  },
+  languageMenuItemText: {
+    fontSize: 16,
+    color: '#000',
+  },
+  languageMenuItemTextActive: {
+    color: '#007AFF',
+    fontWeight: '600' as const,
   },
   itemCount: {
     fontSize: 14,

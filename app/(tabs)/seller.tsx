@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -8,12 +8,15 @@ import {
   StyleSheet,
   ActivityIndicator,
 } from 'react-native';
-import { Plus, Package } from 'lucide-react-native';
+import { Plus, Package, Globe } from 'lucide-react-native';
 import { useAuth } from '@/contexts/AuthContext';
+import { useLocale } from '@/contexts/LocaleContext';
 import { trpc } from '@/lib/trpc';
 
 export default function SellerScreen() {
   const { user } = useAuth();
+  const { t, language, changeLanguage, formatCurrency } = useLocale();
+  const [showLanguageMenu, setShowLanguageMenu] = useState(false);
 
   const booksQuery = trpc.books.list.useQuery({ limit: 100 });
 
@@ -23,7 +26,40 @@ export default function SellerScreen() {
     return (
       <View style={styles.container}>
         <View style={styles.header}>
-          <Text style={styles.headerTitle}>My Books</Text>
+          <Text style={styles.headerTitle}>{t('seller.myBooks')}</Text>
+          <TouchableOpacity
+            style={styles.languageButton}
+            onPress={() => setShowLanguageMenu(!showLanguageMenu)}
+          >
+            <Globe size={20} color="#007AFF" />
+            <Text style={styles.languageButtonText}>{language.toUpperCase()}</Text>
+          </TouchableOpacity>
+          {showLanguageMenu && (
+            <View style={styles.languageMenu}>
+              {(['en', 'ru', 'lv'] as const).map((lang) => (
+                <TouchableOpacity
+                  key={lang}
+                  style={[
+                    styles.languageMenuItem,
+                    language === lang && styles.languageMenuItemActive,
+                  ]}
+                  onPress={() => {
+                    changeLanguage(lang);
+                    setShowLanguageMenu(false);
+                  }}
+                >
+                  <Text
+                    style={[
+                      styles.languageMenuItemText,
+                      language === lang && styles.languageMenuItemTextActive,
+                    ]}
+                  >
+                    {t(`language.${lang}`)}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          )}
         </View>
         <View style={styles.centerContent}>
           <ActivityIndicator size="large" color="#007AFF" />
@@ -35,10 +71,45 @@ export default function SellerScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>My Books</Text>
-        <TouchableOpacity style={styles.addButton}>
-          <Plus size={24} color="#007AFF" />
+        <View style={styles.headerLeft}>
+          <Text style={styles.headerTitle}>{t('seller.myBooks')}</Text>
+          <TouchableOpacity style={styles.addButton}>
+            <Plus size={24} color="#007AFF" />
+          </TouchableOpacity>
+        </View>
+        <TouchableOpacity
+          style={styles.languageButton}
+          onPress={() => setShowLanguageMenu(!showLanguageMenu)}
+        >
+          <Globe size={20} color="#007AFF" />
+          <Text style={styles.languageButtonText}>{language.toUpperCase()}</Text>
         </TouchableOpacity>
+        {showLanguageMenu && (
+          <View style={styles.languageMenu}>
+            {(['en', 'ru', 'lv'] as const).map((lang) => (
+              <TouchableOpacity
+                key={lang}
+                style={[
+                  styles.languageMenuItem,
+                  language === lang && styles.languageMenuItemActive,
+                ]}
+                onPress={() => {
+                  changeLanguage(lang);
+                  setShowLanguageMenu(false);
+                }}
+              >
+                <Text
+                  style={[
+                    styles.languageMenuItemText,
+                    language === lang && styles.languageMenuItemTextActive,
+                  ]}
+                >
+                  {t(`language.${lang}`)}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        )}
       </View>
 
       {myBooks.length === 0 ? (
@@ -70,7 +141,7 @@ export default function SellerScreen() {
                   </View>
                   <View style={styles.statItem}>
                     <Text style={styles.statLabel}>Price</Text>
-                    <Text style={styles.statValue}>${item.price.toFixed(2)}</Text>
+                    <Text style={styles.statValue}>{formatCurrency(item.price)}</Text>
                   </View>
                 </View>
               </View>
@@ -96,6 +167,11 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#E5E5E5',
   },
+  headerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
   headerTitle: {
     fontSize: 28,
     fontWeight: '700' as const,
@@ -108,6 +184,51 @@ const styles = StyleSheet.create({
     backgroundColor: '#F0F0F0',
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  languageButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+    backgroundColor: '#F5F5F5',
+  },
+  languageButtonText: {
+    fontSize: 14,
+    fontWeight: '600' as const,
+    color: '#007AFF',
+  },
+  languageMenu: {
+    position: 'absolute',
+    top: 60,
+    right: 16,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 8,
+    minWidth: 150,
+    overflow: 'hidden',
+    zIndex: 1000,
+  },
+  languageMenuItem: {
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    backgroundColor: '#FFFFFF',
+  },
+  languageMenuItemActive: {
+    backgroundColor: '#F0F8FF',
+  },
+  languageMenuItemText: {
+    fontSize: 16,
+    color: '#000',
+  },
+  languageMenuItemTextActive: {
+    color: '#007AFF',
+    fontWeight: '600' as const,
   },
   centerContent: {
     flex: 1,

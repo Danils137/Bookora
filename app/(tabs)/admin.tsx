@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -6,11 +6,15 @@ import {
   StyleSheet,
   ActivityIndicator,
 } from 'react-native';
-import { Users, BookOpen, ShoppingBag, DollarSign } from 'lucide-react-native';
+import { Users, BookOpen, ShoppingBag, DollarSign, Globe } from 'lucide-react-native';
 import { trpc } from '@/lib/trpc';
+import { useLocale } from '@/contexts/LocaleContext';
 import { users } from '@/lib/mock-db';
+import { TouchableOpacity } from 'react-native';
 
 export default function AdminScreen() {
+  const { t, language, changeLanguage, formatCurrency } = useLocale();
+  const [showLanguageMenu, setShowLanguageMenu] = useState(false);
   const booksQuery = trpc.books.list.useQuery({ limit: 1000 });
   const ordersQuery = trpc.orders.list.useQuery({});
 
@@ -18,7 +22,40 @@ export default function AdminScreen() {
     return (
       <View style={styles.container}>
         <View style={styles.header}>
-          <Text style={styles.headerTitle}>Admin Dashboard</Text>
+          <Text style={styles.headerTitle}>{t('admin.title')}</Text>
+          <TouchableOpacity
+            style={styles.languageButton}
+            onPress={() => setShowLanguageMenu(!showLanguageMenu)}
+          >
+            <Globe size={20} color="#007AFF" />
+            <Text style={styles.languageButtonText}>{language.toUpperCase()}</Text>
+          </TouchableOpacity>
+          {showLanguageMenu && (
+            <View style={styles.languageMenu}>
+              {(['en', 'ru', 'lv'] as const).map((lang) => (
+                <TouchableOpacity
+                  key={lang}
+                  style={[
+                    styles.languageMenuItem,
+                    language === lang && styles.languageMenuItemActive,
+                  ]}
+                  onPress={() => {
+                    changeLanguage(lang);
+                    setShowLanguageMenu(false);
+                  }}
+                >
+                  <Text
+                    style={[
+                      styles.languageMenuItemText,
+                      language === lang && styles.languageMenuItemTextActive,
+                    ]}
+                  >
+                    {t(`language.${lang}`)}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          )}
         </View>
         <View style={styles.centerContent}>
           <ActivityIndicator size="large" color="#007AFF" />
@@ -54,7 +91,7 @@ export default function AdminScreen() {
     {
       icon: DollarSign,
       label: 'Total Revenue',
-      value: `$${totalRevenue.toFixed(2)}`,
+      value: formatCurrency(totalRevenue),
       color: '#FF9500',
     },
   ];
@@ -62,7 +99,40 @@ export default function AdminScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Admin Dashboard</Text>
+        <Text style={styles.headerTitle}>{t('admin.title')}</Text>
+        <TouchableOpacity
+          style={styles.languageButton}
+          onPress={() => setShowLanguageMenu(!showLanguageMenu)}
+        >
+          <Globe size={20} color="#007AFF" />
+          <Text style={styles.languageButtonText}>{language.toUpperCase()}</Text>
+        </TouchableOpacity>
+        {showLanguageMenu && (
+          <View style={styles.languageMenu}>
+            {(['en', 'ru', 'lv'] as const).map((lang) => (
+              <TouchableOpacity
+                key={lang}
+                style={[
+                  styles.languageMenuItem,
+                  language === lang && styles.languageMenuItemActive,
+                ]}
+                onPress={() => {
+                  changeLanguage(lang);
+                  setShowLanguageMenu(false);
+                }}
+              >
+                <Text
+                  style={[
+                    styles.languageMenuItemText,
+                    language === lang && styles.languageMenuItemTextActive,
+                  ]}
+                >
+                  {t(`language.${lang}`)}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        )}
       </View>
 
       <ScrollView contentContainerStyle={styles.content}>
@@ -145,11 +215,59 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderBottomWidth: 1,
     borderBottomColor: '#E5E5E5',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
   },
   headerTitle: {
     fontSize: 28,
     fontWeight: '700' as const,
     color: '#000',
+  },
+  languageButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+    backgroundColor: '#F5F5F5',
+  },
+  languageButtonText: {
+    fontSize: 14,
+    fontWeight: '600' as const,
+    color: '#007AFF',
+  },
+  languageMenu: {
+    position: 'absolute',
+    top: 60,
+    right: 16,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 8,
+    minWidth: 150,
+    overflow: 'hidden',
+    zIndex: 1000,
+  },
+  languageMenuItem: {
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    backgroundColor: '#FFFFFF',
+  },
+  languageMenuItemActive: {
+    backgroundColor: '#F0F8FF',
+  },
+  languageMenuItemText: {
+    fontSize: 16,
+    color: '#000',
+  },
+  languageMenuItemTextActive: {
+    color: '#007AFF',
+    fontWeight: '600' as const,
   },
   centerContent: {
     flex: 1,

@@ -10,13 +10,16 @@ import {
   ActivityIndicator,
   SafeAreaView,
 } from 'react-native';
-import { Search, SlidersHorizontal } from 'lucide-react-native';
+import { Search, SlidersHorizontal, Globe } from 'lucide-react-native';
 import { trpc } from '@/lib/trpc';
 import { useAuth } from '@/contexts/AuthContext';
+import { useLocale } from '@/contexts/LocaleContext';
 import { router } from 'expo-router';
 
 export default function HomeScreen() {
   const { isAuthenticated } = useAuth();
+  const { t, formatCurrency, language, changeLanguage } = useLocale();
+  const [showLanguageMenu, setShowLanguageMenu] = useState(false);
   const [search, setSearch] = useState('');
   const [showFilters, setShowFilters] = useState(false);
   const [filters, setFilters] = useState({
@@ -37,13 +40,13 @@ export default function HomeScreen() {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.centerContent}>
-          <Text style={styles.title}>Welcome to Bookora</Text>
-          <Text style={styles.subtitle}>Please login to continue</Text>
+          <Text style={styles.title}>{t('welcome')}</Text>
+          <Text style={styles.subtitle}>{t('login.title')}</Text>
           <TouchableOpacity
             style={styles.primaryButton}
             onPress={() => router.push('/login')}
           >
-            <Text style={styles.buttonText}>Login</Text>
+            <Text style={styles.buttonText}>{t('login.button')}</Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>
@@ -53,7 +56,40 @@ export default function HomeScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Bookora</Text>
+        <Text style={styles.headerTitle}>{t('app.name')}</Text>
+        <TouchableOpacity
+          style={styles.languageButton}
+          onPress={() => setShowLanguageMenu(!showLanguageMenu)}
+        >
+          <Globe size={20} color="#007AFF" />
+          <Text style={styles.languageButtonText}>{language.toUpperCase()}</Text>
+        </TouchableOpacity>
+        {showLanguageMenu && (
+          <View style={styles.languageMenu}>
+            {(['en', 'ru', 'lv'] as const).map((lang) => (
+              <TouchableOpacity
+                key={lang}
+                style={[
+                  styles.languageMenuItem,
+                  language === lang && styles.languageMenuItemActive,
+                ]}
+                onPress={() => {
+                  changeLanguage(lang);
+                  setShowLanguageMenu(false);
+                }}
+              >
+                <Text
+                  style={[
+                    styles.languageMenuItemText,
+                    language === lang && styles.languageMenuItemTextActive,
+                  ]}
+                >
+                  {t(`language.${lang}`)}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        )}
       </View>
 
       <View style={styles.searchContainer}>
@@ -61,7 +97,7 @@ export default function HomeScreen() {
           <Search size={20} color="#666" />
           <TextInput
             style={styles.searchInput}
-            placeholder="Search books, authors..."
+            placeholder={t('search.placeholder')}
             value={search}
             onChangeText={setSearch}
           />
@@ -78,14 +114,14 @@ export default function HomeScreen() {
         <View style={styles.filtersContainer}>
           <TextInput
             style={styles.filterInput}
-            placeholder="Genre"
+            placeholder={t('filter.genre')}
             value={filters.genre}
             onChangeText={(text) => setFilters({ ...filters, genre: text })}
           />
           <View style={styles.priceFilters}>
             <TextInput
               style={[styles.filterInput, styles.priceInput]}
-              placeholder="Min Price"
+              placeholder={t('filter.minPrice')}
               keyboardType="numeric"
               value={filters.minPrice?.toString() || ''}
               onChangeText={(text) =>
@@ -94,7 +130,7 @@ export default function HomeScreen() {
             />
             <TextInput
               style={[styles.filterInput, styles.priceInput]}
-              placeholder="Max Price"
+              placeholder={t('filter.maxPrice')}
               keyboardType="numeric"
               value={filters.maxPrice?.toString() || ''}
               onChangeText={(text) =>
@@ -111,7 +147,7 @@ export default function HomeScreen() {
         </View>
       ) : booksQuery.error ? (
         <View style={styles.centerContent}>
-          <Text style={styles.errorText}>Error loading books</Text>
+          <Text style={styles.errorText}>{t('error.loading')}</Text>
         </View>
       ) : (
         <FlatList
@@ -132,7 +168,7 @@ export default function HomeScreen() {
                 <Text style={styles.bookAuthor} numberOfLines={1}>
                   {item.author}
                 </Text>
-                <Text style={styles.bookPrice}>${item.price.toFixed(2)}</Text>
+                <Text style={styles.bookPrice}>{formatCurrency(item.price)}</Text>
               </View>
             </TouchableOpacity>
           )}
@@ -152,11 +188,58 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderBottomWidth: 1,
     borderBottomColor: '#E5E5E5',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
   },
   headerTitle: {
     fontSize: 28,
     fontWeight: '700' as const,
     color: '#000',
+  },
+  languageButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+    backgroundColor: '#F5F5F5',
+  },
+  languageButtonText: {
+    fontSize: 14,
+    fontWeight: '600' as const,
+    color: '#007AFF',
+  },
+  languageMenu: {
+    position: 'absolute',
+    top: 60,
+    right: 16,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 8,
+    minWidth: 150,
+    overflow: 'hidden',
+  },
+  languageMenuItem: {
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    backgroundColor: '#FFFFFF',
+  },
+  languageMenuItemActive: {
+    backgroundColor: '#F0F8FF',
+  },
+  languageMenuItemText: {
+    fontSize: 16,
+    color: '#000',
+  },
+  languageMenuItemTextActive: {
+    color: '#007AFF',
+    fontWeight: '600' as const,
   },
   searchContainer: {
     flexDirection: 'row',

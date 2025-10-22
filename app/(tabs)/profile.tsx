@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -6,12 +6,15 @@ import {
   StyleSheet,
   ScrollView,
 } from 'react-native';
-import { LogOut, User, Mail, Shield, Package } from 'lucide-react-native';
+import { LogOut, User, Mail, Shield, Package, Globe } from 'lucide-react-native';
 import { useAuth } from '@/contexts/AuthContext';
+import { useLocale, Language } from '@/contexts/LocaleContext';
 import { router } from 'expo-router';
 
 export default function ProfileScreen() {
   const { user, isAuthenticated, logout } = useAuth();
+  const { t, language, changeLanguage } = useLocale();
+  const [showLanguageMenu, setShowLanguageMenu] = useState(false);
 
   const handleLogout = async () => {
     await logout();
@@ -22,15 +25,48 @@ export default function ProfileScreen() {
     return (
       <View style={styles.container}>
         <View style={styles.header}>
-          <Text style={styles.headerTitle}>Profile</Text>
+          <Text style={styles.headerTitle}>{t('profile.title')}</Text>
+          <TouchableOpacity
+            style={styles.languageButton}
+            onPress={() => setShowLanguageMenu(!showLanguageMenu)}
+          >
+            <Globe size={20} color="#007AFF" />
+            <Text style={styles.languageButtonText}>{language.toUpperCase()}</Text>
+          </TouchableOpacity>
+          {showLanguageMenu && (
+            <View style={styles.languageMenu}>
+              {(['en', 'ru', 'lv'] as const).map((lang) => (
+                <TouchableOpacity
+                  key={lang}
+                  style={[
+                    styles.languageMenuItem,
+                    language === lang && styles.languageMenuItemActive,
+                  ]}
+                  onPress={() => {
+                    changeLanguage(lang);
+                    setShowLanguageMenu(false);
+                  }}
+                >
+                  <Text
+                    style={[
+                      styles.languageMenuItemText,
+                      language === lang && styles.languageMenuItemTextActive,
+                    ]}
+                  >
+                    {t(`language.${lang}`)}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          )}
         </View>
         <View style={styles.centerContent}>
-          <Text style={styles.subtitle}>Please login to view your profile</Text>
+          <Text style={styles.subtitle}>{t('login.title')}</Text>
           <TouchableOpacity
             style={styles.primaryButton}
             onPress={() => router.push('/login')}
           >
-            <Text style={styles.buttonText}>Login</Text>
+            <Text style={styles.buttonText}>{t('login.button')}</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -40,7 +76,40 @@ export default function ProfileScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Profile</Text>
+        <Text style={styles.headerTitle}>{t('profile.title')}</Text>
+        <TouchableOpacity
+          style={styles.languageButton}
+          onPress={() => setShowLanguageMenu(!showLanguageMenu)}
+        >
+          <Globe size={20} color="#007AFF" />
+          <Text style={styles.languageButtonText}>{language.toUpperCase()}</Text>
+        </TouchableOpacity>
+        {showLanguageMenu && (
+          <View style={styles.languageMenu}>
+            {(['en', 'ru', 'lv'] as const).map((lang) => (
+              <TouchableOpacity
+                key={lang}
+                style={[
+                  styles.languageMenuItem,
+                  language === lang && styles.languageMenuItemActive,
+                ]}
+                onPress={() => {
+                  changeLanguage(lang);
+                  setShowLanguageMenu(false);
+                }}
+              >
+                <Text
+                  style={[
+                    styles.languageMenuItemText,
+                    language === lang && styles.languageMenuItemTextActive,
+                  ]}
+                >
+                  {t(`language.${lang}`)}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        )}
       </View>
 
       <ScrollView contentContainerStyle={styles.content}>
@@ -55,14 +124,14 @@ export default function ProfileScreen() {
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Account Information</Text>
+          <Text style={styles.sectionTitle}>{t('profile.name')}</Text>
 
           <View style={styles.infoItem}>
             <View style={styles.infoIcon}>
               <Mail size={20} color="#666" />
             </View>
             <View style={styles.infoContent}>
-              <Text style={styles.infoLabel}>Email</Text>
+              <Text style={styles.infoLabel}>{t('profile.email')}</Text>
               <Text style={styles.infoValue}>{user.email}</Text>
             </View>
           </View>
@@ -73,7 +142,7 @@ export default function ProfileScreen() {
                 <Package size={20} color="#666" />
               </View>
               <View style={styles.infoContent}>
-                <Text style={styles.infoLabel}>Company</Text>
+                <Text style={styles.infoLabel}>{t('profile.role')}</Text>
                 <Text style={styles.infoValue}>{user.companyName}</Text>
               </View>
             </View>
@@ -84,7 +153,7 @@ export default function ProfileScreen() {
               <Shield size={20} color="#666" />
             </View>
             <View style={styles.infoContent}>
-              <Text style={styles.infoLabel}>Account Status</Text>
+              <Text style={styles.infoLabel}>{t('profile.role')}</Text>
               <Text style={[styles.infoValue, styles.statusText]}>
                 {user.status.toUpperCase()}
               </Text>
@@ -97,13 +166,13 @@ export default function ProfileScreen() {
             style={styles.menuItem}
             onPress={() => router.push('/orders')}
           >
-            <Text style={styles.menuText}>My Orders</Text>
+            <Text style={styles.menuText}>{t('profile.myOrders')}</Text>
           </TouchableOpacity>
         )}
 
         <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
           <LogOut size={20} color="#FF3B30" />
-          <Text style={styles.logoutText}>Logout</Text>
+          <Text style={styles.logoutText}>{t('profile.logout')}</Text>
         </TouchableOpacity>
       </ScrollView>
     </View>
@@ -120,11 +189,59 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderBottomWidth: 1,
     borderBottomColor: '#E5E5E5',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
   },
   headerTitle: {
     fontSize: 28,
     fontWeight: '700' as const,
     color: '#000',
+  },
+  languageButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+    backgroundColor: '#F5F5F5',
+  },
+  languageButtonText: {
+    fontSize: 14,
+    fontWeight: '600' as const,
+    color: '#007AFF',
+  },
+  languageMenu: {
+    position: 'absolute',
+    top: 60,
+    right: 16,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 8,
+    minWidth: 150,
+    overflow: 'hidden',
+    zIndex: 1000,
+  },
+  languageMenuItem: {
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    backgroundColor: '#FFFFFF',
+  },
+  languageMenuItemActive: {
+    backgroundColor: '#F0F8FF',
+  },
+  languageMenuItemText: {
+    fontSize: 16,
+    color: '#000',
+  },
+  languageMenuItemTextActive: {
+    color: '#007AFF',
+    fontWeight: '600' as const,
   },
   centerContent: {
     flex: 1,
